@@ -1,5 +1,5 @@
 # Databricks notebook source
-# MAGIC %md-sandbox
+# MAGIC %md
 # MAGIC
 # MAGIC ## 0-Compute Sample Configurations
 # MAGIC
@@ -12,9 +12,9 @@
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
+# MAGIC %md
 # MAGIC
-# MAGIC ## 1-Ingesting and preparing PDF for LLM and Self Managed Vector Search Embeddings
+# MAGIC ## 1-Set up
 # MAGIC
 
 # COMMAND ----------
@@ -54,8 +54,8 @@ spark.sql(f"CREATE VOLUME IF NOT EXISTS {catalog}.{dbName}.{volumeName}")
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## 1.1-Ingesting Databricks ebook PDFs and extracting their pages
+# MAGIC %md
+# MAGIC ## 2-PDF Ingestion
 # MAGIC
 
 # COMMAND ----------
@@ -74,12 +74,13 @@ print(folderVolumePath)
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## 1.2-Please Upload Some PDFs to the folder in the UC volume above
+# MAGIC %md
+# MAGIC ### Please Upload Some PDFs to the folder in the UC volume above
 # MAGIC
 
 # COMMAND ----------
 
+# Run this cell if there's no sample PDFs for testing. This will upload a number of Databricks Docs PDF
 upload_pdfs_to_volume(folderVolumePath)
 
 # COMMAND ----------
@@ -107,9 +108,9 @@ df = (spark.readStream
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
+# MAGIC %md
 # MAGIC
-# MAGIC ## 1.3-Extracting our PDF content as text chunks
+# MAGIC ## 3-PDF Content Extraction
 # MAGIC
 
 # COMMAND ----------
@@ -182,7 +183,7 @@ deploy_client = get_deploy_client("databricks")
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Computing the chunk embeddings and saving them to our Delta Table
+# MAGIC ## 4-Generate Embeddings for PDFs
 
 # COMMAND ----------
 
@@ -227,6 +228,11 @@ from pyspark.sql import functions as F
 
 # MAGIC %sql
 # MAGIC select count(*) from pdf_content_embeddings;
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 5-Create & Sync Vector Search Index
 
 # COMMAND ----------
 

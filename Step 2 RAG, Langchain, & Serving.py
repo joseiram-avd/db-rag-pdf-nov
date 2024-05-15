@@ -1,5 +1,10 @@
 # Databricks notebook source
-# MAGIC %md-sandbox
+# MAGIC %md
+# MAGIC ## 1-Set up
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC
 # MAGIC ### Configure PAT Token for Development Purposes
 # MAGIC
@@ -40,6 +45,7 @@ dbName = "hz_demos_rag_pdf_db"
 secret_scope_name = "hzdemos"
 secret_key_name = "hz_rag_sp_token"
 finalchatBotModelName = "hz_rag_pdf_bot"
+yourEmailAddress = "h.zhang@databricks.com"
 
 # COMMAND ----------
 
@@ -47,7 +53,7 @@ persona_prompt = "You are a Big Data chatbot. Please answer Big Data question on
 
 role_prompt = "You are a trustful assistant for Databricks users. You are answering python, coding, SQL, data engineering, spark, data science, AI, ML, Datawarehouse, platform, API or infrastructure, Cloud administration question related to Databricks. "
 
-guardrail_prompt = "You are classifying documents to know if this question is related with Databricks in AWS, Azure and GCP, Workspaces, Databricks account and cloud infrastructure setup, Data Science, Data Engineering, Big Data, Datawarehousing, SQL, Python and Scala or something from a very different field. Also answer no if the last part is inappropriate."
+guardrail_prompt = "You are classifying documents to know if this question is related with Databricks in AWS, Azure and GCP, Workspaces, Databricks account and cloud infrastructure setup, Data Science, Data Engineering, Big Data, Datawarehousing, SQL, Python and Scala or something from a very different field. If the prompt contains the word Databricks, answer Yes. Also answer no if the last part is inappropriate."
 
 guardrail_example = """
 Question: What is Databricks?
@@ -61,7 +67,7 @@ spark.sql(f"USE {catalog}.{dbName}")
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Exploring Langchain capabilities
+# MAGIC ## 2-Langchain Test
 
 # COMMAND ----------
 
@@ -86,7 +92,7 @@ print(chain.invoke({"question": "What is Spark?"}))
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Adding conversation history to the prompt 
+# MAGIC ## 3-Add Conversation History
 
 # COMMAND ----------
 
@@ -136,7 +142,7 @@ print(chain_with_history.invoke({
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Add a filter on top to only answer Databricks-related questions.
+# MAGIC ## 4-Add Filter/Guardrail
 
 # COMMAND ----------
 
@@ -186,20 +192,20 @@ print(is_about_databricks_chain.invoke({
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ### Use LangChain to retrieve documents from the vector store
+# MAGIC %md
+# MAGIC ## 5-Retrieve Content from Vector Search DB
 
 # COMMAND ----------
 
-spark.sql('GRANT USAGE ON CATALOG `hz_demos_rag` TO `h.zhang@databricks.com`');
-spark.sql('GRANT USAGE ON DATABASE `hz_demos_rag`.`hz_rag_ecl` TO `h.zhang@databricks.com`');
+spark.sql(f'GRANT USAGE ON CATALOG `{catalog}` TO `{yourEmailAddress}`');
+spark.sql(f'GRANT USAGE ON DATABASE `{catalog}`.`{dbName}` TO `{yourEmailAddress}`');
 
 # COMMAND ----------
 
 from databricks.sdk import WorkspaceClient
 import databricks.sdk.service.catalog as c
 WorkspaceClient().grants.update(c.SecurableType.TABLE, f"{catalog}.{dbName}.{vectorSearchIndexName}",
-changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal="h.zhang@databricks.com")])
+changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal=f"{yourEmailAddress}")])
 
 # COMMAND ----------
 
@@ -214,7 +220,7 @@ test_demo_permissions(host, secret_scope=secret_scope_name, secret_key=secret_ke
 from databricks.vector_search.client import VectorSearchClient
 from langchain_community.vectorstores import DatabricksVectorSearch
 from langchain_community.embeddings import DatabricksEmbeddings
-from langchain.chains import RetrievalQA
+# from langchain.chains import RetrievalQA
 import os
 
 os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get(secret_scope_name, secret_key_name)
@@ -248,7 +254,7 @@ print(retrieve_document_chain.invoke({"messages": [{"role": "user", "content": "
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Improve document search using LLM to generate a better sentence for the vector store, based on the chat history
+# MAGIC ## 6-Incorporate Vector Search Content in Prompt
 
 # COMMAND ----------
 
@@ -299,8 +305,8 @@ print(f"Test retriever question, summarized with history: {output}")
 
 # COMMAND ----------
 
-# MAGIC %md-sandbox
-# MAGIC ## Final Query
+# MAGIC %md
+# MAGIC ## 7-Finished Chain and Query Testing
 # MAGIC
 # MAGIC
 
@@ -408,7 +414,7 @@ display_chat(dialog["messages"], response)
 # COMMAND ----------
 
 # MAGIC %md 
-# MAGIC ## Register the chatbot model to Unity Catalog
+# MAGIC ## 8-Register the chatbot model to Unity Catalog
 
 # COMMAND ----------
 
