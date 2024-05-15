@@ -9,19 +9,20 @@
 # MAGIC ### Configure PAT Token for Development Purposes
 # MAGIC
 # MAGIC 1. Open up Web Terminal on your cluster
-# MAGIC 2. Command: `databricks configure`
+# MAGIC 2. Command: `pip install databricks-cli`
+# MAGIC 3. Command: `databricks configure`
 # MAGIC 	1. Host: https://YOUR_WORKSPACE_URL (Ending in databricks.com)
 # MAGIC 	2. username: Your Email Address
 # MAGIC 	3. Password: Your Personal Access Token (Create one by following the instructions [here](https://docs.databricks.com/en/dev-tools/auth/pat.html#databricks-personal-access-tokens-for-workspace-users))
 # MAGIC
 # MAGIC     **Note: For Production Purposes, We recommend service pinricpal token instead of PAT token**
 # MAGIC
-# MAGIC 2. Command: `databricks secrets create-scope --scope [secret_scope_name]`
-# MAGIC 3. Command: `databricks secrets list --scope [secret_scope_name]`
-# MAGIC 4. Command: `databricks secrets put --scope [secret_scope_name] --key [secrete_key_name]`
+# MAGIC 4. Command: `databricks secrets create-scope --scope [secret_scope_name]`
+# MAGIC 5. Command: `databricks secrets put --scope [secret_scope_name] --key [secrete_key_name]`
 # MAGIC 	1. `select-editor` (Select vim)
 # MAGIC 	2. Paste the PAT token you created above
 # MAGIC 	3. :wq (Save the info and exit from vim)
+# MAGIC 6. Command: `databricks secrets list --scope [secret_scope_name]`
 
 # COMMAND ----------
 
@@ -40,11 +41,11 @@ max_tokens = 2000
 VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-8"
 vectorSearchIndexName = "pdf_content_embeddings_index"
 embeddings_endpoint = "databricks-bge-large-en"
-catalog = "hz_demos_rag_pdf_databricks"
-dbName = "hz_demos_rag_pdf_db"
-secret_scope_name = "hzdemos"
-secret_key_name = "hz_rag_sp_token"
-finalchatBotModelName = "hz_rag_pdf_bot"
+catalog = "hz_rag_poc_test_catalog"
+dbName = "hz_rag_poc_test_db"
+secret_scope_name = "hzdemos_test"
+secret_key_name = "hz_rag_pat_test"
+finalchatBotModelName = "hz_rag_pdf_test_bot"
 yourEmailAddress = "h.zhang@databricks.com"
 
 # COMMAND ----------
@@ -53,7 +54,7 @@ persona_prompt = "You are a Big Data chatbot. Please answer Big Data question on
 
 role_prompt = "You are a trustful assistant for Databricks users. You are answering python, coding, SQL, data engineering, spark, data science, AI, ML, Datawarehouse, platform, API or infrastructure, Cloud administration question related to Databricks. "
 
-guardrail_prompt = "You are classifying documents to know if this question is related with Databricks in AWS, Azure and GCP, Workspaces, Databricks account and cloud infrastructure setup, Data Science, Data Engineering, Big Data, Datawarehousing, SQL, Python and Scala or something from a very different field. If the prompt contains the word Databricks, answer Yes. Also answer no if the last part is inappropriate."
+guardrail_prompt = "You are classifying documents to know if this question is related with Databricks in AWS, Azure and GCP, Workspaces, Databricks account and cloud infrastructure setup, Data Science, Data Engineering, Big Data, Datawarehousing, SQL, Python and Scala or something from a very different field. If the prompt contains the word Databricks, answer Yes. Answer no if it's not related with the topics mentioned above. Also answer no if the last part is inappropriate."
 
 guardrail_example = """
 Question: What is Databricks?
@@ -389,9 +390,6 @@ initial_question = input("Question?: ")
 dialog = {
     "messages": [
         {"role": "user", "content": initial_question + " Give me an extended and detailed response"}
-        
-        # {"role": "assistant", "content": initial_answer}, 
-        # {"role": "user", "content": final_question}
     ]
 }
 # print(f'Testing with relevant history and question...')
@@ -405,7 +403,7 @@ dialog = {
     "messages": [
         {"role": "user", "content": dialog['messages'][0]['content']},
         {"role": "assistant", "content": response['result']}, 
-        {"role": "user", "content": followup_question}
+        {"role": "user", "content": followup_question + " Give me an extended and detailed response"}
     ]
 }
 response = full_chain.invoke(dialog)

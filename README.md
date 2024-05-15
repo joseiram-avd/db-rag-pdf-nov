@@ -1,18 +1,18 @@
 # Databricks PDF-based Retrieval Augmented Generation (RAG) Proof of Concept (PoC) Repo
 
 ## Intro
-Welcome to the Databricks Retrieval Augmented Generation (RAG) Proof of Concept (PoC) repository. This repository is designed to guide Databricks users through the creation of a fast and efficient RAG PoC based on PDFs that you already have, utilizing the necessary Databricks infrastructure components. Inspired by the solution accelerator found at [Databricks Lakehouse AI: Deploy Your LLM Chatbot](https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/lakehouse-ai-deploy-your-llm-chatbot?itm_data=demo_center), this repository brings modifications for enhanced usability, flexibility, and simplicity.
+Welcome to the Databricks PDF-based Retrieval Augmented Generation (RAG) Proof of Concept (PoC) repository. This repository is designed to guide Databricks users through the creation of a fast and efficient RAG PoC based on PDFs that you already have, utilizing the necessary Databricks infrastructure components. Inspired by the solution accelerator found at [Databricks Lakehouse AI: Deploy Your LLM Chatbot](https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/lakehouse-ai-deploy-your-llm-chatbot?itm_data=demo_center), this repository brings modifications for enhanced usability, flexibility, and simplicity.
 
 ## Overview
-This repository enables users to learn how to create and deploy a real-time Q&A chatbot using Databricks' RAG and serverless capabilities. By leveraging the DBRX Instruct Foundation Model, users can ensure smart, contextually relevant responses. The beauty of this approach lies in its flexibility—the model can be easily swapped out for other models to meet specific needs.
+This repository enables users to learn how to create and deploy a real-time Q&A chatbot using Databricks' RAG and serverless capabilities. By leveraging the DBRX Instruct Foundation Model, users can expect smart, contextually relevant responses. This repo is highly flexible; the underlying embedding and chat model can be easily swapped out for other models to meet specific needs.
 
 RAG is a sophisticated technique that enriches the Large Language Model (LLM) prompt with additional, domain-specific context, enabling the model to deliver more accurate answers. This method yields impressive results using public models, eliminating the need for deploying and fine-tuning proprietary LLMs.
 
 ## Features
 
-1. Flexibility in Parameters: All required parameters can now be adjusted at the beginning of each notebook, offering significant flexiblity and customization
+1. Flexibility in Parameters: All important parameters can now be adjusted at the beginning of each notebook, offering significant flexiblity and customization
 
-2. Sequential Execution: The process is divided into Step 1 and Step 2 notebooks, which should be run in sequence for optimal results.
+2. Sequential Execution: The process is divided into Step 1 and Step 2 notebooks, which should be run in sequence.
 
 3. Custom Testing: Users are encouraged to upload their own PDFs to the UC volume to test the solution's effectiveness.
 
@@ -40,7 +40,7 @@ Step 2 Notebook: Build conversation chains with langchain, vector search, and ex
 ## Summary
 This repository offers a comprehensive guide to deploying a real-time Q&A chatbot using Databricks' cutting-edge RAG and serverless technologies. By following the steps outlined, users will not only enhance their understanding of these technologies but also create a specialized chatbot capable of delivering smart, contextually relevant responses.
 
-MIT License
+##**MIT License**
 
 Copyright (c) 2024 HZ-SA-DSAI
 

@@ -25,9 +25,9 @@
 
 # COMMAND ----------
 
-catalog = "hz_demos_rag_pdf_databricks"
-dbName = "hz_demos_rag_pdf_db"
-volumeName = "hz_demos_rag_volume"
+catalog = "hz_rag_poc_test_catalog"
+dbName = "hz_rag_poc_test_db"
+volumeName = "hz_rag_poc_test_volume"
 folderName = "sample_pdf_folder"
 vectorSearchIndexName = "pdf_content_embeddings_index"
 chunk_size = 500
