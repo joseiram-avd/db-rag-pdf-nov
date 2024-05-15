@@ -1,1 +1,63 @@
-# db-rag-pdf
+# Databricks PDF-based Retrieval Augmented Generation (RAG) Proof of Concept (PoC) Repo
+
+## Intro
+Welcome to the Databricks Retrieval Augmented Generation (RAG) Proof of Concept (PoC) repository. This repository is designed to guide Databricks users through the creation of a fast and efficient RAG PoC based on PDFs that you already have, utilizing the necessary Databricks infrastructure components. Inspired by the solution accelerator found at [Databricks Lakehouse AI: Deploy Your LLM Chatbot](https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/lakehouse-ai-deploy-your-llm-chatbot?itm_data=demo_center), this repository brings modifications for enhanced usability, flexibility, and simplicity.
+
+## Overview
+This repository enables users to learn how to create and deploy a real-time Q&A chatbot using Databricks' RAG and serverless capabilities. By leveraging the DBRX Instruct Foundation Model, users can ensure smart, contextually relevant responses. The beauty of this approach lies in its flexibility—the model can be easily swapped out for other models to meet specific needs.
+
+RAG is a sophisticated technique that enriches the Large Language Model (LLM) prompt with additional, domain-specific context, enabling the model to deliver more accurate answers. This method yields impressive results using public models, eliminating the need for deploying and fine-tuning proprietary LLMs.
+
+## Features
+
+1. Flexibility in Parameters: All required parameters can now be adjusted at the beginning of each notebook, offering significant flexiblity and customization
+
+2. Sequential Execution: The process is divided into Step 1 and Step 2 notebooks, which should be run in sequence for optimal results.
+
+3. Custom Testing: Users are encouraged to upload their own PDFs to the UC volume to test the solution's effectiveness.
+
+## Learning Objectives
+
+By utilizing this repository, you will gain practical experience in:
+
+1. Preparing Clean Documents: Learn how to prepare and clean documents to build an internal knowledge base, specializing your chatbot for your specific domain.
+
+2. Leveraging Databricks Vector Search: Utilize our Foundation Model endpoint to create and store document embeddings, enhancing the chatbot's ability to retrieve relevant information.
+
+3. Searching Similar Documents: Employ Databricks Vector Search to find similar documents within your knowledge database, ensuring your chatbot can pull from a rich source of information.
+
+4. Deploying Real-Time Models: Discover how to deploy a real-time model using RAG, providing augmented context in the prompt for more accurate responses.
+
+5. Utilizing DBRX Instruct Model: Take advantage of the fully managed Databricks Foundation Model endpoint to ensure your chatbot benefits from the latest advancements in AI.
+
+## Getting Started
+To begin, ensure you follow the notebooks in the prescribed order:
+
+Step 1 Notebook: Set up your environment and prepare your documents for ingestion, chunking, and embedding generation.
+
+Step 2 Notebook: Build conversation chains with langchain, vector search, and execute queries. 
+
+## Summary
+This repository offers a comprehensive guide to deploying a real-time Q&A chatbot using Databricks' cutting-edge RAG and serverless technologies. By following the steps outlined, users will not only enhance their understanding of these technologies but also create a specialized chatbot capable of delivering smart, contextually relevant responses.
+
+MIT License
+
+Copyright (c) 2024 HZ-SA-DSAI
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
