@@ -1,5 +1,9 @@
 # Databricks PDF-based Retrieval Augmented Generation (RAG) Proof of Concept (PoC) Repo
 
+Author: Han Zhang, Solutions Architect at Databricks. 
+
+Contact: h.zhang@databricks.com
+
 ## Intro
 Welcome to the Databricks PDF-based Retrieval Augmented Generation (RAG) Proof of Concept (PoC) repository. This repository is designed to guide Databricks users through the creation of a fast and efficient RAG PoC based on PDFs that you already have, utilizing the necessary Databricks infrastructure components. Inspired by the solution accelerator found at [Databricks Lakehouse AI: Deploy Your LLM Chatbot](https://www.databricks.com/resources/demos/tutorials/data-science-and-ai/lakehouse-ai-deploy-your-llm-chatbot?itm_data=demo_center), this repository brings modifications for enhanced usability, flexibility, and simplicity.
 
