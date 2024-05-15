@@ -44,7 +44,7 @@ Step 2 Notebook: Build conversation chains with langchain, vector search, and ex
 ## Summary
 This repository offers a comprehensive guide to deploying a real-time Q&A chatbot using Databricks' cutting-edge RAG and serverless technologies. By following the steps outlined, users will not only enhance their understanding of these technologies but also create a specialized chatbot capable of delivering smart, contextually relevant responses.
 
-##**MIT License**
+## **MIT License**
 
 Copyright (c) 2024 HZ-SA-DSAI
 
