@@ -26,8 +26,8 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install mlflow==2.10.1 lxml==4.9.3 langchain==0.1.5 databricks-vectorsearch==0.22 cloudpickle==2.2.1 databricks-sdk==0.18.0 cloudpickle==2.2.1 pydantic==2.5.2
-# MAGIC %pip install pip mlflow[databricks]==2.10.1
+# MAGIC %pip install databricks-rag-studio 'mlflow>=2.13'
+# MAGIC %pip install lxml==4.9.3 langchain==0.1.5 databricks-vectorsearch==0.22 cloudpickle==2.2.1 databricks-sdk==0.18.0 cloudpickle==2.2.1 pydantic==2.5.2
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
@@ -36,7 +36,8 @@
 
 # COMMAND ----------
 
-chatBotModel = "databricks-dbrx-instruct"
+# chatBotModel = "databricks-dbrx-instruct"
+chatBotModel = "databricks-meta-llama-3-70b-instruct"
 max_tokens = 2000
 VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-8"
 vectorSearchIndexName = "pdf_content_embeddings_index"
@@ -64,6 +65,13 @@ Expected Response: Yes
 # COMMAND ----------
 
 spark.sql(f"USE {catalog}.{dbName}")
+
+# COMMAND ----------
+
+import re
+import pandas as pd
+import mlflow
+import json
 
 # COMMAND ----------
 
@@ -333,7 +341,7 @@ question_with_history_and_context_prompt = PromptTemplate(
 )
 
 def format_context(docs):
-    return "\n\n".join([d.page_content for d in docs])
+    return "!@#$".join([d.page_content for d in docs])
 
 def extract_source_urls(docs):
     return [d.metadata["url"] for d in docs]
@@ -355,11 +363,13 @@ relevant_question_chain = (
   |
   {
     "prompt": question_with_history_and_context_prompt,
+    "context": itemgetter("context"),
     "sources": itemgetter("sources")
   }
   |
   {
     "result": itemgetter("prompt") | chat_model | StrOutputParser(),
+    "context": itemgetter("context"),
     "sources": itemgetter("sources")
   }
 )
@@ -424,6 +434,14 @@ from mlflow.models import infer_signature
 mlflow.set_registry_uri("databricks-uc")
 model_name = f"{catalog}.{dbName}.{finalchatBotModelName}"
 
+mlflow.langchain.autolog(
+    log_input_examples=True,
+    log_model_signatures=True,
+    log_models=True,
+    log_inputs_outputs=True,
+    registered_model_name=model_name
+)
+
 with mlflow.start_run(run_name=f"{finalchatBotModelName}_run") as run:
     #Get our model signature from input/output
     output = full_chain.invoke(dialog)
@@ -448,7 +466,16 @@ with mlflow.start_run(run_name=f"{finalchatBotModelName}_run") as run:
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## 9-Inference
+
+# COMMAND ----------
+
 # MAGIC %md Let's try loading our model
+
+# COMMAND ----------
+
+print(model_info.model_uri)
 
 # COMMAND ----------
 
@@ -468,3 +495,71 @@ model_response = model.invoke(dialog)
 # COMMAND ----------
 
 display_chat(dialog["messages"], model_response)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## 10-Evaluation
+
+# COMMAND ----------
+
+
+
+# Get the run ID of the logged model
+run_id = model.run_id
+
+# Download the inference inputs and outputs log
+client = mlflow.tracking.MlflowClient()
+artifact_path = f"runs:/{run_id}/inference_inputs_outputs.json"
+local_path = client.download_artifacts(run_id, "inference_inputs_outputs.json")
+
+# Read and print the log
+with open(local_path, 'r') as f:
+    logs = json.load(f)
+    print(json.dumps(logs, indent=2))
+
+# COMMAND ----------
+
+evaluation_data = []
+
+for item in logs['data']:
+  unit_request = {}
+  unit_request["request_id"] = item[logs['columns'].index("session_id")][0]
+  unit_request["request"] = item[logs['columns'].index("input-messages")][0]['content']
+  unit_request["response"] = item[logs['columns'].index("output-result")]
+  unit_request["retrieved_context"] = []
+  context_parts = item[logs['columns'].index("output-context")].split('!@#$')
+  for index, unit_uri in enumerate(item[logs['columns'].index("output-sources")]):
+    unit_request['retrieved_context'].append({"content": context_parts[index], "doc_uri": unit_uri})
+  evaluation_data.append(unit_request)
+
+# COMMAND ----------
+
+evaluation_data_df = pd.DataFrame(evaluation_data)
+
+# COMMAND ----------
+
+display(spark.createDataFrame(evaluation_data))
+
+# COMMAND ----------
+
+# If you do not start a MLflow run, `evaluate(...) will start a Run on your behalf.
+with mlflow.start_run(run_name="rag_poc_eval_run"):
+  evaluation_results = mlflow.evaluate(data=evaluation_data_df, model_type="databricks-rag")
+
+# COMMAND ----------
+
+metrics_as_dict = evaluation_results.metrics
+
+print("Aggregate metrics computed:")
+display(metrics_as_dict)
+
+
+# COMMAND ----------
+
+per_question_results_df = evaluation_results.tables['eval_results']
+display(per_question_results_df)
+
+print("Columns available for each question:")
+print(per_question_results_df.columns)
+

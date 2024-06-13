@@ -19,7 +19,6 @@
 
 # COMMAND ----------
 
-# DBTITLE 1,Install required external libraries
 # MAGIC %pip install transformers==4.30.2 "unstructured[pdf,docx]==0.10.30" langchain==0.1.5 llama-index==0.9.3 databricks-vectorsearch==0.22 pydantic==1.10.9 mlflow==2.10.1
 # MAGIC dbutils.library.restartPython()
 
@@ -64,7 +63,6 @@ volume_folder =  f"/Volumes/{catalog}/{dbName}/{volumeName}"
 
 # COMMAND ----------
 
-# DBTITLE 1,Our pdf or docx files are available in our Volume (or DBFS)
 dbutils.fs.mkdirs(f"{volume_folder}/{folderName}")
 
 # COMMAND ----------
@@ -89,7 +87,7 @@ display(dbutils.fs.ls(folderVolumePath))
 
 # COMMAND ----------
 
-# DBTITLE 1,Ingesting PDF files as binary format using Databricks cloudFiles (Autoloader)
+# DBTITLE 1,Ingesting PDF files as binary format using Auto Loader
 df = (spark.readStream
         .format('cloudFiles')
         .option('cloudFiles.format', 'BINARYFILE')
@@ -161,7 +159,7 @@ def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
 
 # COMMAND ----------
 
-# DBTITLE 1,Using Databricks Foundation model BGE as embedding endpoint
+# DBTITLE 1,Using Databricks Foundation model BGE for embedding
 from mlflow.deployments import get_deploy_client
 from pprint import pprint
 
