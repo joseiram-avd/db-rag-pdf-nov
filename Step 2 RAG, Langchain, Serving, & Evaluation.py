@@ -192,6 +192,7 @@ with mlflow.start_run(run_name=f"{finalchatBotModelName}_run"):
 model_name = f"{catalog}.{dbName}.{finalchatBotModelName}"
 
 # Register to UC
+mlflow.set_registry_uri('databricks-uc')
 uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.model_uri, name=model_name)
 
 # COMMAND ----------
