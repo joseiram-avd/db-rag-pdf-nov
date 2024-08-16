@@ -24,15 +24,15 @@
 
 # COMMAND ----------
 
-catalog = "hz_rag_poc_test_catalog"
-dbName = "hz_rag_poc_test_db"
-volumeName = "hz_rag_poc_test_volume"
+catalog = "hz_august_rag_catalog"
+dbName = "hz_august_rag_db"
+volumeName = "hz_august_rag_volume"
 folderName = "sample_pdf_folder"
 vectorSearchIndexName = "pdf_content_embeddings_index"
 chunk_size = 500
 chunk_overlap = 50
-embeddings_endpoint = "databricks-bge-large-en"
-VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-8"
+embeddings_endpoint = "databricks-gte-large-en"
+VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-10"
 
 # COMMAND ----------
 
@@ -163,7 +163,7 @@ def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
 from mlflow.deployments import get_deploy_client
 from pprint import pprint
 
-# bge-large-en Foundation models are available using the /serving-endpoints/databricks-bge-large-en/invocations api. 
+# GTE Large models are available using the serving-endpoints/databricks-gte-large-en/invocations api. 
 deploy_client = get_deploy_client("databricks")
 
 # COMMAND ----------
