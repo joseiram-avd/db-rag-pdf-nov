@@ -1,6 +1,6 @@
 # Databricks PDF-based Retrieval Augmented Generation (RAG) Proof of Concept (PoC) Repo
 
-Author: Han Zhang, Ajinkya Gutti, Z Sun, Solutions Architects at Databricks. 
+Author: Han Zhang, Ajinkya Gutti, Z Sun, Tian Tan, Solutions Architects at Databricks. 
 
 Contact: h.zhang@databricks.com
 
