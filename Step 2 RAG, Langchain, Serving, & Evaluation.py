@@ -6,7 +6,7 @@
 
 # MAGIC %md
 # MAGIC
-# MAGIC ### Configure PAT Token for Development Purposes
+# MAGIC ### Configure PAT Token for Development Purposes [OPTIONAL]
 # MAGIC
 # MAGIC 1. Open up Web Terminal on your cluster
 # MAGIC 2. Command: `pip install databricks-cli`
@@ -26,7 +26,7 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install databricks-rag-studio 'mlflow>=2.13'
+# MAGIC %pip install databricks-agents 'mlflow>=2.13'
 # MAGIC %pip install lxml==4.9.3 langchain==0.1.5 databricks-vectorsearch==0.22 cloudpickle==2.2.1 databricks-sdk==0.18.0 cloudpickle==2.2.1 pydantic==2.5.2
 # MAGIC dbutils.library.restartPython()
 
@@ -39,14 +39,14 @@
 # chatBotModel = "databricks-dbrx-instruct"
 chatBotModel = "databricks-meta-llama-3-70b-instruct"
 max_tokens = 2000
-VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-8"
+VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-10"
 vectorSearchIndexName = "pdf_content_embeddings_index"
-embeddings_endpoint = "databricks-bge-large-en"
-catalog = "hz_rag_poc_test_catalog"
-dbName = "hz_rag_poc_test_db"
-secret_scope_name = "hzdemos_test"
-secret_key_name = "hz_rag_pat_test"
-finalchatBotModelName = "hz_rag_pdf_test_bot"
+embeddings_endpoint = "databricks-gte-large-en"
+catalog = "hz_august_rag_catalog"
+dbName = "hz_august_rag_db"
+# secret_scope_name = "hzdemos_test"
+# secret_key_name = "hz_rag_pat_test"
+finalchatBotModelName = "hz_august_rag_bot"
 yourEmailAddress = "h.zhang@databricks.com"
 
 # COMMAND ----------
@@ -221,8 +221,8 @@ changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal=f"{yourEmail
 index_name=f"{catalog}.{dbName}.{vectorSearchIndexName}"
 host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
 
-#Let's make sure the secret is properly setup and can access our vector search index. Check the quick-start demo for more guidance
-test_demo_permissions(host, secret_scope=secret_scope_name, secret_key=secret_key_name, vs_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name, embedding_endpoint_name=embeddings_endpoint, managed_embeddings = False)
+# #Let's make sure the secret is properly setup and can access our vector search index. Check the quick-start demo for more guidance
+# test_demo_permissions(host, secret_scope=secret_scope_name, secret_key=secret_key_name, vs_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name, embedding_endpoint_name=embeddings_endpoint, managed_embeddings = False)
 
 # COMMAND ----------
 
@@ -232,14 +232,15 @@ from langchain_community.embeddings import DatabricksEmbeddings
 # from langchain.chains import RetrievalQA
 import os
 
-os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get(secret_scope_name, secret_key_name)
+# os.environ['DATABRICKS_TOKEN'] = dbutils.secrets.get(secret_scope_name, secret_key_name)
 
 embedding_model = DatabricksEmbeddings(endpoint=embeddings_endpoint)
 
 def get_retriever(persist_dir: str = None):
     os.environ["DATABRICKS_HOST"] = host
     #Get the vector search index
-    vsc = VectorSearchClient(workspace_url=host, personal_access_token=os.environ["DATABRICKS_TOKEN"])
+    # vsc = VectorSearchClient(workspace_url=host, personal_access_token=os.environ["DATABRICKS_TOKEN"])
+    vsc = VectorSearchClient(workspace_url=host)
     vs_index = vsc.get_index(
         endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME,
         index_name=index_name
@@ -503,8 +504,6 @@ display_chat(dialog["messages"], model_response)
 
 # COMMAND ----------
 
-
-
 # Get the run ID of the logged model
 run_id = model.run_id
 
@@ -545,7 +544,7 @@ display(spark.createDataFrame(evaluation_data))
 
 # If you do not start a MLflow run, `evaluate(...) will start a Run on your behalf.
 with mlflow.start_run(run_name="rag_poc_eval_run"):
-  evaluation_results = mlflow.evaluate(data=evaluation_data_df, model_type="databricks-rag")
+  evaluation_results = mlflow.evaluate(data=evaluation_data_df, model_type="databricks-agent")
 
 # COMMAND ----------
 
