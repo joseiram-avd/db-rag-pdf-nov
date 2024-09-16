@@ -4,7 +4,7 @@
 # MAGIC ## 0-Compute Sample Configurations
 # MAGIC
 # MAGIC 1. **Access Mode**: Assigned to single user
-# MAGIC 2. **Databricks Runtime Version**: 14.3 LTS
+# MAGIC 2. **Databricks Runtime Version**: 15.4 LTS
 # MAGIC 3. Photon not required
 # MAGIC 4. **Single-Node Cluster with No Worker**
 # MAGIC 5. **Driver/Worker Type**: m5d.4xlarge (64GB Memory, 16 Cores)
@@ -19,32 +19,19 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install transformers==4.30.2 "unstructured[pdf,docx]==0.10.30" langchain==0.1.5 llama-index==0.9.3 databricks-vectorsearch==0.22 pydantic==1.10.9 mlflow==2.10.1
+# MAGIC %md
+# MAGIC
+# MAGIC #### Please remember to modify config notebook before proceeding
+
+# COMMAND ----------
+
+# DBTITLE 1,Install required external libraries 
+# MAGIC %pip install --quiet -U transformers==4.41.1 pypdf==4.1.0 langchain-text-splitters==0.2.0 databricks-vectorsearch mlflow tiktoken==0.7.0 torch==2.3.0 llama-index==0.10.43
 # MAGIC dbutils.library.restartPython()
 
 # COMMAND ----------
 
-catalog = "hz_august_rag_catalog"
-dbName = "hz_august_rag_db"
-volumeName = "hz_august_rag_volume"
-folderName = "sample_pdf_folder"
-vectorSearchIndexName = "pdf_content_embeddings_index"
-chunk_size = 500
-chunk_overlap = 50
-embeddings_endpoint = "databricks-gte-large-en"
-VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-10"
-
-# COMMAND ----------
-
-dbutils.notebook.run("./00-init-advanced", 0, {"reset_all_data": "false", "catalog": catalog, "dbName": dbName})
-
-# COMMAND ----------
-
-# MAGIC %run ./00-helper
-
-# COMMAND ----------
-
-install_ocr_on_nodes()
+# MAGIC %run ./00-init-advanced $reset_all_data=true
 
 # COMMAND ----------
 
@@ -113,28 +100,33 @@ df = (spark.readStream
 
 # COMMAND ----------
 
-# DBTITLE 1,Transform pdf as text
-from unstructured.partition.auto import partition
-import re
+# DBTITLE 1,To extract our PDF,  we'll need to setup libraries in our nodes
+import warnings
+from pypdf import PdfReader
 
-def extract_doc_text(x : bytes) -> str:
-  # Read files and extract the values with unstructured
-  sections = partition(file=io.BytesIO(x))
-  def clean_section(txt):
-    txt = re.sub(r'\n', '', txt)
-    return re.sub(r' ?\.', '.', txt)
-  # Default split is by section of document, concatenate them all together because we want to split by sentence instead.
-  return "\n".join([clean_section(s.text) for s in sections]) 
+def parse_bytes_pypdf(raw_doc_contents_bytes: bytes):
+    try:
+        pdf = io.BytesIO(raw_doc_contents_bytes)
+        reader = PdfReader(pdf)
+        parsed_content = [page_content.extract_text() for page_content in reader.pages]
+        return "\n".join(parsed_content)
+    except Exception as e:
+        warnings.warn(f"Exception {e} has been thrown during parsing")
+        return None
 
 # COMMAND ----------
 
+# DBTITLE 1,Trying our text extraction function with a single pdf file
 import io
 import re
-import requests
-from pyspark.sql.functions import pandas_udf
-import pandas as pd
-from llama_index.langchain_helpers.text_splitter import SentenceSplitter
-from llama_index import Document, set_global_tokenizer
+with requests.get('https://github.com/databricks-demos/dbdemos-dataset/blob/main/llm/databricks-pdf-documentation/Databricks-Customer-360-ebook-Final.pdf?raw=true') as pdf:
+  doc = parse_bytes_pypdf(pdf.content)  
+  print(doc)
+
+# COMMAND ----------
+
+from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core import Document, set_global_tokenizer
 from transformers import AutoTokenizer
 from typing import Iterator
 
@@ -143,14 +135,16 @@ spark.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 10)
 
 @pandas_udf("array<string>")
 def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
-    #set llama2 as tokenizer to match our model size (will stay below BGE 1024 limit)
+    #set llama2 as tokenizer to match our model size (will stay below gte 1024 limit)
     set_global_tokenizer(
       AutoTokenizer.from_pretrained("hf-internal-testing/llama-tokenizer")
     )
     #Sentence splitter from llama_index to split on sentences
-    splitter = SentenceSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    splitter = SentenceSplitter(chunk_size=500, chunk_overlap=10)
     def extract_and_split(b):
-      txt = extract_doc_text(b)
+      txt = parse_bytes_pypdf(b)
+      if txt is None:
+        return []
       nodes = splitter.get_nodes_from_documents([Document(text=txt)])
       return [n.text for n in nodes]
 
@@ -159,12 +153,15 @@ def read_as_chunk(batch_iter: Iterator[pd.Series]) -> Iterator[pd.Series]:
 
 # COMMAND ----------
 
-# DBTITLE 1,Using Databricks Foundation model BGE for embedding
+# DBTITLE 1,Using Databricks Foundation model GTE as embedding endpoint
 from mlflow.deployments import get_deploy_client
-from pprint import pprint
 
-# GTE Large models are available using the serving-endpoints/databricks-gte-large-en/invocations api. 
+# gte-large-en Foundation models are available using the /serving-endpoints/databricks-gtegte-large-en/invocations api. 
 deploy_client = get_deploy_client("databricks")
+
+## NOTE: if you change your embedding model here, make sure you change it in the query step too
+embeddings = deploy_client.predict(endpoint=embeddings_endpoint, inputs={"input": ["What is Apache Spark?"]})
+pprint(embeddings)
 
 # COMMAND ----------
 
@@ -207,7 +204,6 @@ def get_embedding(contents: pd.Series) -> pd.Series:
 
 # COMMAND ----------
 
-from pyspark.sql import functions as F
 (spark.readStream.table('pdf_raw')
       .withColumn("content", F.explode(read_as_chunk("content")))
       .withColumn("embedding", get_embedding("content"))
@@ -215,6 +211,16 @@ from pyspark.sql import functions as F
   .writeStream
     .trigger(availableNow=True)
     .option("checkpointLocation", f'dbfs:{volume_folder}/checkpoints/pdf_chunk')
+    .table('pdf_content_embeddings').awaitTermination())
+
+#Let's also add our documentation web page content
+if table_exists(f'{catalog}.{dbName}.databricks_documentation'):
+  (spark.readStream.option("skipChangeCommits", "true").table('databricks_documentation') #skip changes for more stable demo
+      .withColumn('embedding', get_embedding("content"))
+      .select('url', 'content', 'embedding')
+  .writeStream
+    .trigger(availableNow=True)
+    .option("checkpointLocation", f'dbfs:{volume_folder}/checkpoints/docs_chunks')
     .table('pdf_content_embeddings').awaitTermination())
 
 # COMMAND ----------

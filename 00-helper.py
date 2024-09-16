@@ -1,4 +1,8 @@
 # Databricks notebook source
+# MAGIC %run ./config
+
+# COMMAND ----------
+
 import time
 
 def endpoint_exists(vsc, vs_endpoint_name):

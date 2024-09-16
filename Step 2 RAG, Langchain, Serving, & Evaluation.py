@@ -4,28 +4,6 @@
 
 # COMMAND ----------
 
-# MAGIC %md
-# MAGIC
-# MAGIC ### Configure PAT Token for Development Purposes [OPTIONAL]
-# MAGIC
-# MAGIC 1. Open up Web Terminal on your cluster
-# MAGIC 2. Command: `pip install databricks-cli`
-# MAGIC 3. Command: `databricks configure`
-# MAGIC 	1. Host: https://YOUR_WORKSPACE_URL (Ending in databricks.com)
-# MAGIC 	2. username: Your Email Address
-# MAGIC 	3. Password: Your Personal Access Token (Create one by following the instructions [here](https://docs.databricks.com/en/dev-tools/auth/pat.html#databricks-personal-access-tokens-for-workspace-users))
-# MAGIC
-# MAGIC     **Note: For Production Purposes, We recommend service pinricpal token instead of PAT token**
-# MAGIC
-# MAGIC 4. Command: `databricks secrets create-scope --scope [secret_scope_name]`
-# MAGIC 5. Command: `databricks secrets put --scope [secret_scope_name] --key [secrete_key_name]`
-# MAGIC 	1. `select-editor` (Select vim)
-# MAGIC 	2. Paste the PAT token you created above
-# MAGIC 	3. :wq (Save the info and exit from vim)
-# MAGIC 6. Command: `databricks secrets list --scope [secret_scope_name]`
-
-# COMMAND ----------
-
 # MAGIC %pip install databricks-agents 'mlflow>=2.13'
 # MAGIC %pip install lxml==4.9.3 langchain==0.1.5 databricks-vectorsearch==0.22 cloudpickle==2.2.1 databricks-sdk==0.18.0 cloudpickle==2.2.1 pydantic==2.5.2
 # MAGIC dbutils.library.restartPython()
@@ -33,21 +11,6 @@
 # COMMAND ----------
 
 # MAGIC %run ./00-helper
-
-# COMMAND ----------
-
-# chatBotModel = "databricks-dbrx-instruct"
-chatBotModel = "databricks-meta-llama-3-70b-instruct"
-max_tokens = 2000
-VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-10"
-vectorSearchIndexName = "pdf_content_embeddings_index"
-embeddings_endpoint = "databricks-gte-large-en"
-catalog = "hz_august_rag_catalog"
-dbName = "hz_august_rag_db"
-# secret_scope_name = "hzdemos_test"
-# secret_key_name = "hz_rag_pat_test"
-finalchatBotModelName = "hz_august_rag_bot"
-yourEmailAddress = "h.zhang@databricks.com"
 
 # COMMAND ----------
 
@@ -220,9 +183,6 @@ changes=[c.PermissionsChange(add=[c.Privilege["SELECT"]], principal=f"{yourEmail
 
 index_name=f"{catalog}.{dbName}.{vectorSearchIndexName}"
 host = "https://" + spark.conf.get("spark.databricks.workspaceUrl")
-
-# #Let's make sure the secret is properly setup and can access our vector search index. Check the quick-start demo for more guidance
-# test_demo_permissions(host, secret_scope=secret_scope_name, secret_key=secret_key_name, vs_endpoint_name=VECTOR_SEARCH_ENDPOINT_NAME, index_name=index_name, embedding_endpoint_name=embeddings_endpoint, managed_embeddings = False)
 
 # COMMAND ----------
 
@@ -527,7 +487,10 @@ for item in logs['data']:
   unit_request["request"] = item[logs['columns'].index("input-messages")][0]['content']
   unit_request["response"] = item[logs['columns'].index("output-result")]
   unit_request["retrieved_context"] = []
-  context_parts = item[logs['columns'].index("output-context")].split('!@#$')
+  try:
+    context_parts = item[logs['columns'].index("output-context")].split('!@#$')
+  except AttributeError:
+    continue
   for index, unit_uri in enumerate(item[logs['columns'].index("output-sources")]):
     unit_request['retrieved_context'].append({"content": context_parts[index], "doc_uri": unit_uri})
   evaluation_data.append(unit_request)
