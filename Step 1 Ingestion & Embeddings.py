@@ -31,7 +31,7 @@
 
 # COMMAND ----------
 
-# MAGIC %run ./00-init-advanced $reset_all_data=false
+# MAGIC %run ./00-init-advanced $reset_all_data=true
 
 # COMMAND ----------
 
