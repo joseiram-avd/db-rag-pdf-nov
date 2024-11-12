@@ -281,4 +281,32 @@ else:
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC # How Hybrid Search Works
 
+# COMMAND ----------
+
+# DBTITLE 1,ann search (default)
+question = "What is the best way to connect to BigQuery?"
+
+response = deploy_client.predict(endpoint=embeddings_endpoint, inputs={"input": [question]})
+embeddings = [e['embedding'] for e in response.data]
+
+results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).similarity_search(
+  query_vector=embeddings[0],
+  columns=["id", "content"],
+  num_results=1)
+docs = results.get('result', {}).get('data_array', [])
+pprint(docs)
+
+# COMMAND ----------
+
+# DBTITLE 1,hybrid search
+results = vsc.get_index(VECTOR_SEARCH_ENDPOINT_NAME, vs_index_fullname).similarity_search(
+  query_text= question,
+  query_vector=embeddings[0],
+  columns=["id", "content"],
+  num_results=1,
+  query_type="hybrid")
+docs = results.get('result', {}).get('data_array', [])
+pprint(docs)

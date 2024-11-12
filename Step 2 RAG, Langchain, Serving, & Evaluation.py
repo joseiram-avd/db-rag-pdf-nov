@@ -17,7 +17,7 @@ spark.sql(f"USE {catalog}.{dbName}")
 # COMMAND ----------
 
 # MAGIC %md-sandbox 
-# MAGIC ## 1 - Prepare our chatbot model with RAG using DBRX
+# MAGIC ## 1 - Prepare our chatbot model with RAG using Llama 3 70B
 
 # COMMAND ----------
 
