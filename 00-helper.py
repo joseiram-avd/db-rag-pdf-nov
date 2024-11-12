@@ -4,6 +4,7 @@
 # COMMAND ----------
 
 import time
+import pandas as pd
 
 def endpoint_exists(vsc, vs_endpoint_name):
   try:
@@ -37,6 +38,29 @@ def wait_for_vs_endpoint_to_be_ready(vsc, vs_endpoint_name):
     else:
       raise Exception(f'''Error with the endpoint {vs_endpoint_name}. - this shouldn't happen: {endpoint}.\n Please delete it and re-run the previous cell: vsc.delete_endpoint("{vs_endpoint_name}")''')
   raise Exception(f"Timeout, your endpoint isn't ready yet: {vsc.get_endpoint(vs_endpoint_name)}")
+
+
+def wait_for_model_serving_endpoint_to_be_ready(ep_name):
+    from databricks.sdk import WorkspaceClient
+    from databricks.sdk.service.serving import EndpointStateReady, EndpointStateConfigUpdate
+    import time
+
+    # TODO make the endpoint name as a param
+    # Wait for it to be ready
+    w = WorkspaceClient()
+    state = ""
+    for i in range(200):
+        state = w.serving_endpoints.get(ep_name).state
+        if state.config_update == EndpointStateConfigUpdate.IN_PROGRESS:
+            if i % 40 == 0:
+                print(f"Waiting for endpoint to deploy {ep_name}. Current state: {state}")
+            time.sleep(10)
+        elif state.ready == EndpointStateReady.READY:
+          print('endpoint ready.')
+          return
+        else:
+          break
+    raise Exception(f"Couldn't start the endpoint, timeout, please check your endpoint for more details: {state}")
 
 # COMMAND ----------
 
@@ -275,6 +299,12 @@ def display_chat(chat_history, response):
   response_html = f"""{answer}{sources_html}"""
 
   displayHTML(chat_history_html + assistant_message_html(response_html))
+
+# COMMAND ----------
+
+def display_txt_as_html(txt):
+    txt = txt.replace('\n', '<br/>')
+    displayHTML(f'<div style="max-height: 150px">{txt}</div>')
 
 # COMMAND ----------
 

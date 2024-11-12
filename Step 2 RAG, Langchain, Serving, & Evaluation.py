@@ -201,8 +201,8 @@ Your inputs are invaluable for the development team. By providing detailed feedb
 agents.set_review_instructions(model_name, instructions_to_reviewer)
 
 
-
-# COMMAND ----------
+# Add the user-facing instructions to the Review App
+agents.set_review_instructions(model_name, instructions_to_reviewer)
 
 wait_for_model_serving_endpoint_to_be_ready(deployment_info.endpoint_name)
 
