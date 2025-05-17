@@ -9,20 +9,20 @@
 
 # COMMAND ----------
 
-catalog = "hz_oct_rag_catalog"
-dbName = "hz_oct_rag_db"
-volumeName = "hz_oct_rag_volume"
-folderName = "sample_pdf_folder"
-vectorSearchIndexName = "pdf_content_embeddings_index"
+catalog = "demos2025"
+dbName = "source_files"
+volumeName = "dent_repair"
+folderName = "invoices"
+vectorSearchIndexName = "pdf_invoices_embeddings_index"
 chunk_size = 500
-chunk_overlap = 50
+chunk_overlap = 100
 embeddings_endpoint = "databricks-gte-large-en"
 VECTOR_SEARCH_ENDPOINT_NAME = "one-env-shared-endpoint-11"
 
 # COMMAND ----------
 
 chatBotModel = "databricks-meta-llama-3-70b-instruct"
-max_tokens = 2000
+max_tokens = 4000
 finalchatBotModelName = "hz_oct_rag_bot"
 yourEmailAddress = "h.zhang@databricks.com"
 

@@ -1,0 +1,1 @@
+{"document_classification": "Classify this document into one of the following categories: invoice, receipt, ID, contract.", "information_extraction": "Extract the following fields from this document: date, total amount, vendor name, transaction ID."}
