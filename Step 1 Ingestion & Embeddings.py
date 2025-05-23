@@ -256,6 +256,63 @@ def get_embedding(contents: pd.Series) -> pd.Series:
 
 # COMMAND ----------
 
+# DBTITLE 1,Generate Embeddings Using Databricks Deploy Client
+@pandas_udf("array<float>")
+def get_infos(contents: pd.Series) -> pd.Series:
+    import mlflow.deployments
+    deploy_client = mlflow.deployments.get_deploy_client("databricks")
+    def get_embeddings(batch):
+        #Note: this will fail if an exception is thrown during embedding creation (add try/except if needed) 
+        response = deploy_client.predict(endpoint=embeddings_endpoint, inputs={"input": batch})
+        return [e['embedding'] for e in response.data]
+
+    # Splitting the contents into batches of 150 items each, since the embedding model takes at most 150 inputs per request.
+    max_batch_size = 150
+    batches = [contents.iloc[i:i + max_batch_size] for i in range(0, len(contents), max_batch_size)]
+
+    # Process each batch and collect the results
+    all_embeddings = []
+    for batch in batches:
+        all_embeddings += get_embeddings(batch.tolist())
+
+    return pd.Series(all_embeddings)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC   ai_query("agents_demos2025-recon-invoice_agent", content) as response
+# MAGIC FROM
+# MAGIC   demos2025.recon.product_docs_docs
+# MAGIC WHERE doc_uri like '%invoices%'
+# MAGIC LIMIT 10;
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT ai_query('agents_demos2025-recon-invoice_agent',
+# MAGIC     request => {
+# MAGIC   "messages": [
+# MAGIC     {
+# MAGIC       "role": "user",
+# MAGIC       "content": "INVOICE #123\nDate: 2024-01-01\nTotal: $100.00"
+# MAGIC     }
+# MAGIC   ]
+# MAGIC },
+# MAGIC     returnType => <Please provide your endpoint return type here!>)
+
+# COMMAND ----------
+
+# DBTITLE 1,Filter Invoices from Product Docs Table
+df = (spark.table('demos2025.recon.product_docs_docs')
+      .filter(F.col('doc_uri').contains('invoices'))
+)
+display(df)     
+
+
+
+# COMMAND ----------
+
 # DBTITLE 1,Sample PDF Invoices Embeddings
 # MAGIC %sql
 # MAGIC SELECT * FROM pdf_invoices_embeddings limit 10;

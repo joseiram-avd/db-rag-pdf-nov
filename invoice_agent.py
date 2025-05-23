@@ -52,10 +52,22 @@ class InvoiceProcessingAgent(ChatAgent):
     
     def _load_static_prompts(self) -> Dict[str, str]:
         """Load the prompts from JSON"""
+        json_format = {
+               "Empresa": "{{Do topo da página extrair o Nome da Empresa}}",
+               "CNPJ": "{{Do topo da página extrair o CNPJ}}",
+               "Endereço": "{{Do topo da página extrair o Endereço Completo da Empresa}}",
+               "Data Emissao": "{{Do topo da Pagina campo Date}}",
+               "Invoice Nº": "{{Numero seguido de Ano}}",
+               "Bill_to": "{{Campo Bill To}}",
+               "Bill_Address": "{{Linhas entre Bill To e P.IVA}}",
+               "P.IVA": "{{Código IVA}}"
+               }
+        
         prompts = {
             "document_classification": "Classify this document into one of the following categories: invoice, receipt, ID, contract.",
-            "information_extraction": "Extract the following fields from this document: date, total amount, vendor name, transaction ID."
-        }
+            "information_extraction": f"Extract the following fields from this document: Empresa, CNPJ, Endereço, Data Emissao, Invoice Nº, Bill_to, Bill_Address, P.IVA. If the field is not present, return 'N/A'.Your response must be a valid JSON (no extra text) object starting with {{ and ending with }}. The JSON should be formatted as follows (no extra text): {json_format}."
+            }
+                
         return prompts
     
     def predict(
@@ -88,21 +100,22 @@ class InvoiceProcessingAgent(ChatAgent):
         document_text = user_messages[-1].content
         
         # Process the document
-        document_class = self._classify_document(document_text)
+        # document_class = self._classify_document(document_text)
         extracted_info = self._extract_information(document_text)
         
         # Format the response
-        result = {
-            "document_class": document_class,
-            "extracted_information": extracted_info
-        }
+        # result = {
+        #     "document_class": document_class,
+        #     "extracted_information": extracted_info
+        # }
         
         # Create and return the agent response
         return ChatAgentResponse(messages=[
             ChatAgentMessage(
                 id=message_id,
                 role="assistant", 
-                content=f"Document classified as: {document_class}\n\nExtracted information: {json.dumps(extracted_info, indent=2)}"
+                # content=f"Document classified as: {document_class}\n\nExtracted information: {json.dumps(extracted_info, indent=2)}"
+                content=f"{json.dumps(extracted_info, indent=2)}"
             )
         ])
     
@@ -138,40 +151,41 @@ class InvoiceProcessingAgent(ChatAgent):
         document_text = user_messages[-1].content
         
         # Process the document (in real implementation, this would be streamed)
-        document_class = self._classify_document(document_text)
+        # document_class = self._classify_document(document_text)
         
         # Yield the classification result
-        yield ChatAgentChunk(delta=ChatAgentMessage(
-            id=message_id, 
-            role="assistant", 
-            content=f"Document classified as: {document_class}\n\n"
-        ))
+        # yield ChatAgentChunk(delta=ChatAgentMessage(
+        #     id=message_id, 
+        #     role="assistant", 
+        #     content=f"Document classified as: {document_class}\n\n"
+        # ))
         
         # Process and yield the extraction result
         extracted_info = self._extract_information(document_text)
         yield ChatAgentChunk(delta=ChatAgentMessage(
             id=message_id, 
             role="assistant", 
-            content=f"Extracted information: {json.dumps(extracted_info, indent=2)}"
+            # content=f"Extracted information: {json.dumps(extracted_info, indent=2)}"
+            content=f"{json.dumps(extracted_info, indent=2)}"
         ))
     
-    def _classify_document(self, document_text: str) -> str:
-        """
-        Classify the document using foundation model.
-        """
-        classification_prompt = self.prompts["document_classification"]
+    # def _classify_document(self, document_text: str) -> str:
+    #     """
+    #     Classify the document using foundation model.
+    #     """
+    #     classification_prompt = self.prompts["document_classification"]
         
-        response = self.openai_client.chat.completions.create(
-            model=self.endpoint_name,
-            messages=[
-                {"role": "system", "content": "You are an expert document classifier."},
-                {"role": "user", "content": f"{classification_prompt}\n\nDocument: {document_text}"}
-            ],
-            temperature=0.0,
-            max_tokens=256
-        )
+    #     response = self.openai_client.chat.completions.create(
+    #         model=self.endpoint_name,
+    #         messages=[
+    #             {"role": "system", "content": "You are an expert document classifier."},
+    #             {"role": "user", "content": f"{classification_prompt}\n\nDocument: {document_text}"}
+    #         ],
+    #         temperature=0.0,
+    #         max_tokens=256
+    #     )
         
-        return response.choices[0].message.content.strip()
+    #     return response.choices[0].message.content.strip()
     
     def _extract_information(self, document_text: str) -> Dict[str, Any]:
         """
@@ -182,7 +196,7 @@ class InvoiceProcessingAgent(ChatAgent):
         response = self.openai_client.chat.completions.create(
             model=self.endpoint_name,
             messages=[
-                {"role": "system", "content": "You are an expert at extracting structured information from documents. Return the information in JSON format."},
+                {"role": "system", "content": "You are an expert at extracting structured information from documents."},
                 {"role": "user", "content": f"{extraction_prompt}\n\nDocument: {document_text}"}
             ],
             temperature=0.0,
